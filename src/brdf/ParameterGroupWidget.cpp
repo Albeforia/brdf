@@ -466,7 +466,7 @@ void ParameterGroupWidget::saveParamsFileButtonPushed()
     
     // if we got a filename back... save it
     if( fileName.length() )
-        brdf->saveParamsFile( fileName.toAscii().constData() );
+        brdf->saveParamsFile( fileName.toStdString().c_str() );
 }
 
 
