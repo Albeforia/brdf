@@ -43,7 +43,7 @@ implied warranties of merchantability, fitness for a particular purpose and non-
 infringement.
 */
 
-#include <QtGui>
+#include <QtWidgets>
 #include "ColorVarWidget.h"
 
 QColorDialog* ColorVarWidget::_colorDialog = 0;

@@ -43,7 +43,7 @@ implied warranties of merchantability, fitness for a particular purpose and non-
 infringement.
 */
 
-#include <QtGui>
+#include <QtWidgets>
 #include "MainWindow.h"
 #include "ParameterWindow.h"
 #include "PlotCartesianWidget.h"

@@ -44,7 +44,7 @@ infringement.
 */
 
 #include <stdio.h>
-#include <QtGui>
+#include <QtWidgets>
 #include <vector>
 #include "ParameterWindow.h"
 #include "FloatVarWidget.h"

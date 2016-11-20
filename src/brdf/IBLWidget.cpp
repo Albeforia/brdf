@@ -44,7 +44,7 @@ infringement.
 */
 
 #include <GL/glew.h>
-#include <QtGui>
+#include <QtWidgets>
 #include <QString>
 #include <math.h>
 #include <stdlib.h>
