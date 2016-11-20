@@ -36,7 +36,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 */
 #include <stdio.h>
-#include <zlib.h>
+#include <QtZlib\zlib.h>
 #include <vector>
 #include <string>
 #include <map>
