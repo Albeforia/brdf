@@ -100,6 +100,7 @@ QSize ImageSliceWidget::sizeHint() const
 void ImageSliceWidget::initializeGL()
 {
     glewInit();
+	initializeGLFunctions();
     
     glClearColor( 1, 1, 1, 1 );	
     glShadeModel(GL_FLAT);

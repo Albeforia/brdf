@@ -47,6 +47,7 @@ infringement.
 #define _SHARED_CONTEXT_GL_WIDGET_H
 
 #include <QGLWidget>
+#include <QGLFunctions>
 #include "ShowingBase.h"
 
 /*
@@ -62,7 +63,7 @@ A bit of a hack, but it works.
 */
 
 
-class SharedContextGLWidget : public QGLWidget, public ShowingBase
+class SharedContextGLWidget : public QGLWidget, public ShowingBase, protected QGLFunctions
 {
 public:
     SharedContextGLWidget(QWidget* parent);

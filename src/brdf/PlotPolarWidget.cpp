@@ -95,6 +95,7 @@ QSize PlotPolarWidget::sizeHint() const
 void PlotPolarWidget::initializeGL()
 {
 	glewInit();
+	initializeGLFunctions();
 
     glClearColor( 1, 1, 1, 1 );	
     glShadeModel(GL_FLAT);

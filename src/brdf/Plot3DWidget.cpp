@@ -101,6 +101,7 @@ QSize Plot3DWidget::sizeHint() const
 void Plot3DWidget::initializeGL()
 {
     glewInit();
+	initializeGLFunctions();
     
     makeGeodesicHemisphereVBO();
     

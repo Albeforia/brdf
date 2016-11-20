@@ -230,7 +230,7 @@ QSize IBLWidget::sizeHint() const
 void IBLWidget::initializeGL()
 {
     glewInit();
-
+	initializeGLFunctions();
     
 
     model = new SimpleModel();

@@ -101,6 +101,7 @@ QSize LitSphereWidget::sizeHint() const
 void LitSphereWidget::initializeGL()
 {
 	glewInit();
+	initializeGLFunctions();
 
     glClearColor( 0.25, 0.25, 0.25, 1 );	
 }
