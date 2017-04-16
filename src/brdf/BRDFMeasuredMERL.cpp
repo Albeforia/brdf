@@ -153,6 +153,7 @@ bool BRDFMeasuredMERL::loadMERLData( const char* filename )
 		while (std::getline(paramsfs, params)) {
 			std::smatch matches;
 			if (std::regex_match(params, matches, re) && paramsPack == nullptr) {
+				// TODO: potential duplicate storage
 				paramsPack = new MERLParametersPack();
 				paramsPack->ggx = std::atof(matches[1].str().c_str());
 				paramsPack->diffuseAlbedo[0] = std::atof(matches[2].str().c_str());
@@ -165,6 +166,13 @@ bool BRDFMeasuredMERL::loadMERLData( const char* filename )
 				paramsPack->optimalThreshold[1] = std::atof(matches[9].str().c_str());
 				paramsPack->optimalThreshold[2] = std::atof(matches[10].str().c_str());
 				paramsPack->cluster = std::atoi(matches[11].str().c_str());
+
+				addFloatParameter("diffuseAlbedo_R", 0, 1, std::atof(matches[2].str().c_str()));
+				addFloatParameter("diffuseAlbedo_G", 0, 1, std::atof(matches[3].str().c_str()));
+				addFloatParameter("diffuseAlbedo_B", 0, 1, std::atof(matches[4].str().c_str()));
+				addFloatParameter("specularAlbedo_R", 0, 1, std::atof(matches[5].str().c_str()));
+				addFloatParameter("specularAlbedo_G", 0, 1, std::atof(matches[6].str().c_str()));
+				addFloatParameter("specularAlbedo_B", 0, 1, std::atof(matches[7].str().c_str()));
 			}
 		}
 	}
@@ -217,6 +225,22 @@ void BRDFMeasuredMERL::initGL()
 void BRDFMeasuredMERL::adjustShaderPreRender( DGLShader* shader )
 {
     shader->setUniformTexture( "measuredData", tex, GL_TEXTURE_BUFFER_EXT );
+
+	if (paramsPack != nullptr) {
+		shader->setUniformFloat("optimalThreshold", paramsPack->optimalThreshold[0],
+								paramsPack->optimalThreshold[1], paramsPack->optimalThreshold[2]);
+
+		shader->setUniformFloat("diffuseAlbedoRatio",
+								getFloatParameter(0)->currentVal / getFloatParameter(0)->defaultVal,
+								getFloatParameter(1)->currentVal / getFloatParameter(1)->defaultVal,
+								getFloatParameter(2)->currentVal / getFloatParameter(2)->defaultVal);
+
+		shader->setUniformFloat("specularAlbedoRatio",
+								getFloatParameter(3)->currentVal / getFloatParameter(3)->defaultVal,
+								getFloatParameter(4)->currentVal / getFloatParameter(4)->defaultVal,
+								getFloatParameter(5)->currentVal / getFloatParameter(5)->defaultVal);
+
+	}
 
     BRDFBase::adjustShaderPreRender( shader );
 }

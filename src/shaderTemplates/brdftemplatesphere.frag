@@ -62,12 +62,24 @@ uniform float useNDotL;
 
 float lightDistanceFromCenter = 2.2;
 
-
+vec3 evaluateBRDF(vec3 incidentVector, vec3 viewVec, vec3 normal, vec3 tangent, vec3 bitangent) {
+	vec3 raw = BRDF( incidentVector, viewVec, normal, tangent, bitangent );
+	vec3 diffusePart = vec3(0);
+	vec3 specularPart = vec3(0);
+	if (optimalThreshold.r == 0) {
+		diffusePart = raw * diffuseAlbedoRatio;
+	}
+	else {
+		diffusePart = min(raw, optimalThreshold) * diffuseAlbedoRatio;
+		specularPart = max(vec3(0), raw - optimalThreshold) * specularAlbedoRatio;
+	}
+	return diffusePart + specularPart;
+}
 
 vec3 computeWithDirectionalLight( vec3 surfPt, vec3 incidentVector, vec3 viewVec, vec3 normal, vec3 tangent, vec3 bitangent )
 {
     // evaluate the BRDF
-    vec3 b = max( BRDF( incidentVector, viewVec, normal, tangent, bitangent ), vec3(0.0) ); 
+    vec3 b = max( evaluateBRDF( incidentVector, viewVec, normal, tangent, bitangent ), vec3(0.0) );
 
     // multiply in the cosine factor
     if (useNDotL != 0)
@@ -86,7 +98,7 @@ vec3 computeWithPointLight( vec3 surfPt, vec3 incidentVector, vec3 viewVec, vec3
 
 
     // evaluate the BRDF
-    vec3 b = max( BRDF( toLight, viewVec, normal, tangent, bitangent ), vec3(0.0) ); 
+    vec3 b = max( evaluateBRDF( toLight, viewVec, normal, tangent, bitangent ), vec3(0.0) );
 
     // multiply in the cosine factor
     if (useNDotL != 0)
@@ -105,7 +117,7 @@ vec3 computeWithAreaLight( vec3 surfPt, vec3 incidentVector, vec3 viewVec, vec3 
     float lightRadius = 0.5;
 
     vec3 lightPoint = (incidentVector * lightDistanceFromCenter);
-    
+
 
 
     // define the surface of the light source (we'll have it always face the sphere)
@@ -133,14 +145,14 @@ vec3 computeWithAreaLight( vec3 surfPt, vec3 incidentVector, vec3 viewVec, vec3 
             float pointToLightDist = length( toLight );
             toLight /= pointToLightDist;
 
-    
+
             // evaluate the BRDF
-            vec3 b = max( BRDF( toLight, viewVec, normal, tangent, bitangent ), vec3(0.0) ); 
-        
+            vec3 b = max( evaluateBRDF( toLight, viewVec, normal, tangent, bitangent ), vec3(0.0) );
+
             // multiply in the cosine factor
             if (useNDotL != 0)
                 b *= dot( normal, toLight );
-        
+
             // multiply in the falloff
             b *= (1.0 / (pointToLightDist*pointToLightDist));
 

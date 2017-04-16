@@ -85,7 +85,19 @@ void main(void)
 
     // calculate the radial value of the BRDF at this output vector
     vec3 bRes = BRDF( normalizedIncidentVector, viewingVector, normal, tangent, bitangent );
-    float b = dot( bRes, colorMask );
+
+	// diffuse-specular separation and editing
+	vec3 diffusePart = vec3(0);
+	vec3 specularPart = vec3(0);
+	if (optimalThreshold.r == 0) {
+		diffusePart = bRes * diffuseAlbedoRatio;
+	}
+	else {
+		diffusePart = min(bRes, optimalThreshold) * diffuseAlbedoRatio;
+		specularPart = max(vec3(0), bRes - optimalThreshold) * specularAlbedoRatio;
+	}
+
+	float b = dot( diffusePart + specularPart, colorMask );
     b *= (useNDotL > 0.5 ? dot( normal, normalizedIncidentVector ) : 1.0);
     float radius = useLogPlot > 0.5 ? modifyLog( b ) : b;
 
