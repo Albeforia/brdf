@@ -77,6 +77,7 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
 
 #ifdef WIN32
+/* no longer works in vs2015
     // Make sure there is a console to get our stdout,stderr information
     AllocConsole();
     HANDLE stdOutHandle=GetStdHandle(STD_OUTPUT_HANDLE);
@@ -92,6 +93,28 @@ int main(int argc, char *argv[])
     std::ios::sync_with_stdio();
     std::cerr<<"BRDF Version "<<BRDF_VERSION<<std::endl;
 //    std::cerr<<"stdout: BRDF Version "<<BRDF_VERSION<<std::endl;
+*/
+	// Make sure there is a console to get our stdout,stderr information
+	AllocConsole();
+
+	// Redirect the CRT standard input, output, and error handles to the console
+	freopen("CONIN$", "r", stdin);
+	freopen("CONOUT$", "w", stdout);
+	freopen("CONOUT$", "w", stderr);
+
+	// Clear the error state for each of the C++ standard stream objects. We need to do this, as
+	// attempts to access the standard streams before they refer to a valid target will cause the
+	// iostream objects to enter an error state. In versions of Visual Studio after 2005, this seems
+	// to always occur during startup regardless of whether anything has been read from or written to
+	// the console or not.
+	std::wcout.clear();
+	std::cout.clear();
+	std::wcerr.clear();
+	std::cerr.clear();
+	std::wcin.clear();
+	std::cin.clear();
+
+	std::cerr << "BRDF Version " << BRDF_VERSION << std::endl;
 #endif
 
     // make sure we can open the data files
