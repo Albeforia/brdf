@@ -190,6 +190,7 @@
     <ClInclude Include="..\src\brdf\DGLFrameBuffer.h" />
     <ClInclude Include="..\src\brdf\DGLShader.h" />
     <ClInclude Include="..\src\brdf\geodesicHemisphere.h" />
+    <ClInclude Include="..\src\brdf\MERLParametersPack.h" />
     <ClInclude Include="..\src\brdf\Paths.h" />
     <ClInclude Include="..\src\brdf\ptex\PtexCache.h" />
     <ClInclude Include="..\src\brdf\ptex\PtexDict.h" />

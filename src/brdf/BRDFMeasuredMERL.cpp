@@ -47,6 +47,8 @@ infringement.
 #include <string>
 #include <fstream>
 #include <string.h>
+#include <regex>
+#include <cstdlib>
 #include "BRDFMeasuredMERL.h"
 #include "DGLShader.h"
 #include "Paths.h"
@@ -58,7 +60,7 @@ infringement.
 
 
 BRDFMeasuredMERL::BRDFMeasuredMERL()
-                 : brdfData(NULL)
+                 : brdfData(nullptr), paramsPack(nullptr)
 {
     std::string path = (getShaderTemplatesPath() + "measured.func");
 
@@ -73,6 +75,11 @@ BRDFMeasuredMERL::BRDFMeasuredMERL()
 
 BRDFMeasuredMERL::~BRDFMeasuredMERL()
 {
+	delete[] brdfData;
+	if (paramsPack != nullptr) {
+		delete paramsPack;
+	}
+
     glBindBuffer(GL_TEXTURE_BUFFER_EXT, tbo);
     glDeleteBuffers( 1, &tbo);
 }
@@ -131,6 +138,37 @@ bool BRDFMeasuredMERL::loadMERLData( const char* filename )
     // now we can dump the old data
     free( brdf );
 
+	// read pre-computed parameters
+	std::fstream paramsfs("mat_params.txt", std::ios::in); // TODO: hard-coded file name
+	if (!paramsfs.is_open()) {
+		fprintf(stderr, "can not read pre-computed parameters file\n");
+	}
+	else {
+		auto p1 = name.find_last_of('/') + 1;
+		auto p2 = name.find_last_of('.');
+		auto mat_name = name.substr(p1, p2 - p1);
+		std::string params;
+		std::regex re(mat_name +
+					  R"(\s([0-9]*\.?[0-9]+)\s\((\S+),(\S+),(\S+)\)\s\((\S+),(\S+),(\S+)\)\s\((\S+),(\S+),(\S+)\)\s(\d+)(\**))");
+		while (std::getline(paramsfs, params)) {
+			std::smatch matches;
+			if (std::regex_match(params, matches, re) && paramsPack == nullptr) {
+				paramsPack = new MERLParametersPack();
+				paramsPack->ggx = std::atof(matches[1].str().c_str());
+				paramsPack->diffuseAlbedo[0] = std::atof(matches[2].str().c_str());
+				paramsPack->diffuseAlbedo[1] = std::atof(matches[3].str().c_str());
+				paramsPack->diffuseAlbedo[2] = std::atof(matches[4].str().c_str());
+				paramsPack->specularAlbedo[0] = std::atof(matches[5].str().c_str());
+				paramsPack->specularAlbedo[1] = std::atof(matches[6].str().c_str());
+				paramsPack->specularAlbedo[2] = std::atof(matches[7].str().c_str());
+				paramsPack->optimalThreshold[0] = std::atof(matches[8].str().c_str());
+				paramsPack->optimalThreshold[1] = std::atof(matches[9].str().c_str());
+				paramsPack->optimalThreshold[2] = std::atof(matches[10].str().c_str());
+				paramsPack->cluster = std::atoi(matches[11].str().c_str());
+			}
+		}
+	}
+
     return true;
 }
 
@@ -168,9 +206,9 @@ void BRDFMeasuredMERL::initGL()
     glUnmapBuffer(GL_TEXTURE_BUFFER_EXT);
     glBindBuffer(GL_TEXTURE_BUFFER_EXT, 0);
     
-    
-    delete[] brdfData;
-    brdfData = NULL;
+    // keep origin data for later use
+    //delete[] brdfData;
+    //brdfData = NULL;
     
     initializedGL = true;
 }

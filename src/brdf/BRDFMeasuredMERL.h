@@ -50,6 +50,7 @@ infringement.
 #include <GL/glew.h>
 #include <GL/glut.h>
 #include "BRDFBase.h"
+#include "MERLParametersPack.h"
 
 class BRDFMeasuredMERL : public BRDFBase
 {
@@ -78,6 +79,8 @@ private:
 
     int numBRDFSamples;
     float* brdfData;
+
+	MERLParametersPack* paramsPack;
         
 };
 

@@ -310,6 +310,9 @@
     <ClInclude Include="..\src\brdf\ptex\PtexUtils.h">
       <Filter>Header Files\ptex</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\brdf\MERLParametersPack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\src\brdf\ColorVarWidget.h">
