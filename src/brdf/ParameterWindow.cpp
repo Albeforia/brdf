@@ -155,6 +155,7 @@ void ParameterWindow::openBRDFFromFile()
         for (int i = 0, n = fileNames.size(); i < n; i++) {
             openBRDFFile( fileNames[i].toStdString().c_str() );
         }
+		fileDialog->setDirectory(fileNames[0]);
     }
 }
 
