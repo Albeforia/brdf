@@ -60,6 +60,9 @@ public:
     virtual ~BRDFMeasuredMERL();
 
     bool loadMERLData( const char* filename );
+    bool loadCmbMERL( const char* filename );
+
+	void enableCmb(bool);
 
 protected:
 
@@ -76,11 +79,16 @@ private:
     // IDs needed for the texture buffer object
     GLuint tbo;
     GLuint tex;
+	GLuint cmbTBO;
+	GLuint cmbTEX;
 
     int numBRDFSamples;
-    float* brdfData;
+	float* brdfData;
+	float* cmbBRDFData;
 
 	MERLParametersPack* paramsPack;
+	MERLParametersPack* cmbParamsPack;
+	bool cmbEnabled;
         
 };
 

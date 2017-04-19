@@ -102,6 +102,10 @@ private slots:
     void soloColorsButtonPushed(); 
     void saveParamsFileButtonPushed(); 
 
+	void enableCombination(int);
+	void selectCmbTarget();
+	void resetParams();
+
 private:
     void reload(bool resetToDefaults);
     void addParameterWidgets();
@@ -119,6 +123,8 @@ private:
     QPushButton* titleButton;
     QFrame* containerFrame;
     QVBoxLayout* containerLayout;
+	
+	QPushButton* cmbSelect;
     
     bool dirty;
 

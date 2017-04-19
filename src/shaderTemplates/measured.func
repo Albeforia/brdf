@@ -48,9 +48,12 @@ uniform samplerBuffer measuredData;
 // Diffuse-specular separation
 uniform vec3 optimalThreshold;
 
-// Albedo editing
+// Editing
 uniform vec3 diffuseAlbedoRatio;
 uniform vec3 specularAlbedoRatio;
+uniform samplerBuffer cmbData;
+uniform bool enableCmb;
+uniform vec3 cmbThreshold;
 
 const int BRDF_SAMPLING_RES_THETA_H = 90;
 const int BRDF_SAMPLING_RES_THETA_D = 90;
@@ -135,12 +138,28 @@ vec3 BRDF( vec3 toLight, vec3 toViewer, vec3 normal, vec3 tangent, vec3 bitangen
 
 	vec3 diffusePart = vec3(0);
 	vec3 specularPart = vec3(0);
+
 	if (optimalThreshold.r == 0) {
 		diffusePart = brdfRaw * diffuseAlbedoRatio;
 	}
 	else {
 		diffusePart = min(brdfRaw, optimalThreshold) * diffuseAlbedoRatio;
-		specularPart = max(vec3(0), brdfRaw - optimalThreshold) * specularAlbedoRatio;
+	}
+
+	if (enableCmb) {
+		vec3 brdfCmbRaw = vec3(
+							texelFetch(cmbData, redIndex).r * RED_SCALE,
+        					texelFetch(cmbData, greenIndex).r * GREEN_SCALE,
+                			texelFetch(cmbData, blueIndex).r * BLUE_SCALE
+							);
+		if (cmbThreshold.r != 0) {
+			specularPart = max(vec3(0), brdfCmbRaw - cmbThreshold) * specularAlbedoRatio;
+		}
+	}
+	else {
+		if (optimalThreshold.r != 0) {
+			specularPart = max(vec3(0), brdfRaw - optimalThreshold) * specularAlbedoRatio;
+		}
 	}
 
 	return diffusePart + specularPart;

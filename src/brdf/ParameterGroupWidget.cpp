@@ -43,6 +43,7 @@ implied warranties of merchantability, fitness for a particular purpose and non-
 infringement.
 */
 
+#include "BRDFMeasuredMERL.h"
 #include <QtWidgets>
 #include <stdio.h>
 #include <string.h>
@@ -319,6 +320,27 @@ void ParameterGroupWidget::addParameterWidgets()
     if( !brdf )
             return;
 
+	if (dynamic_cast<BRDFMeasuredMERL*>(brdf)) {
+		QFrame* cmbFrame = new QFrame;
+
+		QHBoxLayout* cmbLayout = new QHBoxLayout;
+		cmbLayout->setMargin(0);
+		cmbLayout->setContentsMargins(0, 0, 0, 0);
+		cmbLayout->setSpacing(2);
+		cmbFrame->setLayout(cmbLayout);
+
+		QCheckBox* cmbEnable = new QCheckBox("Use specular of");
+		cmbLayout->addWidget(cmbEnable);
+		connect(cmbEnable, SIGNAL(stateChanged(int)), this, SLOT(enableCombination(int)));
+
+		cmbSelect = new QPushButton("(none)");
+		cmbSelect->setDisabled(true);
+		cmbLayout->addWidget(cmbSelect);
+		connect(cmbSelect, SIGNAL(clicked()), this, SLOT(selectCmbTarget()));
+
+		containerLayout->addWidget(cmbFrame);
+	}
+
     // loop through and add all the parameters to the list
     int float_index = 0, bool_index = 0, color_index = 0;
     for( int i = 0; i < brdf->getParameterCount(); i++ )
@@ -467,6 +489,54 @@ void ParameterGroupWidget::saveParamsFileButtonPushed()
     // if we got a filename back... save it
     if( fileName.length() )
         brdf->saveParamsFile( fileName.toStdString().c_str() );
+}
+
+
+void ParameterGroupWidget::enableCombination(int state) {
+	auto merlBRDF = dynamic_cast<BRDFMeasuredMERL*>(brdf);
+	if (state == Qt::Checked) {
+		cmbSelect->setEnabled(true);
+		merlBRDF->enableCmb(true);
+	}
+	else {
+		cmbSelect->setDisabled(true);
+		merlBRDF->enableCmb(false);
+	}
+	resetParams();
+}
+
+
+void ParameterGroupWidget::selectCmbTarget() {
+	auto filename = QFileDialog::getOpenFileName(this, "Open another material to combine with",
+												 "./", "MERL BRDF (*.binary)");
+	if (!filename.isNull()) {
+		auto merlBRDF = dynamic_cast<BRDFMeasuredMERL*>(brdf);
+		if (merlBRDF->loadCmbMERL(filename.toStdString().c_str())) {
+			auto p1 = filename.lastIndexOf("/");
+			auto p2 = filename.lastIndexOf(".");
+			cmbSelect->setText(filename.mid(p1 + 1, p2 - p1 - 1));
+
+			resetParams();
+		}
+	}
+}
+
+
+void ParameterGroupWidget::resetParams() {
+	auto merlBRDF = dynamic_cast<BRDFMeasuredMERL*>(brdf);
+	if (merlBRDF) {
+		// block signals here to make sure brdf's parameters are set after changing all the values
+		for (size_t i = 3; i < 6; i++) {
+			auto pw = dynamic_cast<FloatVarWidget*>(brdfParamWidgets[i].widget);
+			pw->blockSignals(true);
+			pw->setValue(merlBRDF->getFloatParameter(i)->currentVal);
+		}
+
+		for (size_t i = 3; i < 6; i++) {
+			dynamic_cast<FloatVarWidget*>(brdfParamWidgets[i].widget)->blockSignals(false);
+		}
+	}
+	paramChanged();
 }
 
 
