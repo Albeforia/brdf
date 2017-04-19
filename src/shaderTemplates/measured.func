@@ -127,9 +127,21 @@ vec3 BRDF( vec3 toLight, vec3 toViewer, vec3 normal, vec3 tangent, vec3 bitangen
     int greenIndex = ind + BRDF_SAMPLING_RES_THETA_H*BRDF_SAMPLING_RES_THETA_D*BRDF_SAMPLING_RES_PHI_D/2;
     int blueIndex = ind + BRDF_SAMPLING_RES_THETA_H*BRDF_SAMPLING_RES_THETA_D*BRDF_SAMPLING_RES_PHI_D;
 
-    return vec3(
-		texelFetch(measuredData, redIndex).r * RED_SCALE,
-                texelFetch(measuredData, greenIndex).r * GREEN_SCALE,
-                texelFetch(measuredData, blueIndex).r * BLUE_SCALE
-                );
+    vec3 brdfRaw = vec3(
+					texelFetch(measuredData, redIndex).r * RED_SCALE,
+        			texelFetch(measuredData, greenIndex).r * GREEN_SCALE,
+                	texelFetch(measuredData, blueIndex).r * BLUE_SCALE
+					);
+
+	vec3 diffusePart = vec3(0);
+	vec3 specularPart = vec3(0);
+	if (optimalThreshold.r == 0) {
+		diffusePart = brdfRaw * diffuseAlbedoRatio;
+	}
+	else {
+		diffusePart = min(brdfRaw, optimalThreshold) * diffuseAlbedoRatio;
+		specularPart = max(vec3(0), brdfRaw - optimalThreshold) * specularAlbedoRatio;
+	}
+
+	return diffusePart + specularPart;
 }
