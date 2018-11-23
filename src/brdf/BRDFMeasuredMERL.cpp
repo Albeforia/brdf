@@ -290,9 +290,9 @@ bool BRDFMeasuredMERL::loadCmbMERL(const char* filename) {
 				getFloatParameter(4)->defaultVal = cmbParamsPack->specularAlbedo[1];
 				getFloatParameter(5)->defaultVal = cmbParamsPack->specularAlbedo[2];
 			
-				getFloatParameter(3)->currentVal = getFloatParameter(3)->defaultVal;
-				getFloatParameter(4)->currentVal = getFloatParameter(4)->defaultVal;
-				getFloatParameter(5)->currentVal = getFloatParameter(5)->defaultVal;
+				//getFloatParameter(3)->currentVal = getFloatParameter(3)->defaultVal;
+				//getFloatParameter(4)->currentVal = getFloatParameter(4)->defaultVal;
+				//getFloatParameter(5)->currentVal = getFloatParameter(5)->defaultVal;
 			}
 		}
 	}
@@ -311,13 +311,14 @@ void BRDFMeasuredMERL::enableCmb(bool enable) {
 		getFloatParameter(5)->defaultVal = cmbParamsPack->specularAlbedo[2];
 	}
 	else {
+		// restore
 		getFloatParameter(3)->defaultVal = paramsPack->specularAlbedo[0];
 		getFloatParameter(4)->defaultVal = paramsPack->specularAlbedo[1];
 		getFloatParameter(5)->defaultVal = paramsPack->specularAlbedo[2];
+		getFloatParameter(3)->currentVal = getFloatParameter(3)->defaultVal;
+		getFloatParameter(4)->currentVal = getFloatParameter(4)->defaultVal;
+		getFloatParameter(5)->currentVal = getFloatParameter(5)->defaultVal;
 	}
-	getFloatParameter(3)->currentVal = getFloatParameter(3)->defaultVal;
-	getFloatParameter(4)->currentVal = getFloatParameter(4)->defaultVal;
-	getFloatParameter(5)->currentVal = getFloatParameter(5)->defaultVal;
 }
 
 
