@@ -230,6 +230,24 @@
     <ClCompile Include="..\src\brdf\ptex\PtexUtils.cpp">
       <Filter>Source Files\ptex</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\brdf\Quad.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\brdf\glerror.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\brdf\Sphere.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_ViewerWindow.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_ViewerWindow.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\brdf\ViewerWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\brdf\angleConvert.h">
@@ -313,6 +331,15 @@
     <ClInclude Include="..\src\brdf\MERLParametersPack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\brdf\Quad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\brdf\glerror.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\brdf\Sphere.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\src\brdf\ColorVarWidget.h">
@@ -361,6 +388,9 @@
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="..\src\brdf\ShowingDockWidget.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\src\brdf\ViewerWindow.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
   </ItemGroup>

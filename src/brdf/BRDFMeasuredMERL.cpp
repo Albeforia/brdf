@@ -43,6 +43,13 @@ implied warranties of merchantability, fitness for a particular purpose and non-
 infringement.
 */
 
+#if defined(_MSC_VER)
+#define _USE_MATH_DEFINES
+#include <cmath>
+#include <math.h>
+#endif
+
+
 #include <cstdlib>
 #include <string>
 #include <fstream>
@@ -63,13 +70,17 @@ BRDFMeasuredMERL::BRDFMeasuredMERL()
                  : brdfData(nullptr), paramsPack(nullptr),
 				   cmbBRDFData(nullptr), cmbParamsPack(nullptr), cmbTBO(NULL), cmbEnabled(false)
 {
-    std::string path = (getShaderTemplatesPath() + "measured.func");
+    std::string path = getShaderTemplatesPath() + "measured.func";
 
     // read the shader
     std::ifstream ifs( path.c_str() );
     std::string temp;
     while( getline( ifs, temp ) )
         brdfFunction += (temp + "\n");
+    addFloatParameter("inTheta", 0,M_PI_2, M_PI_4);
+    addBoolParameter("convolution", false);
+    addBoolParameter("swapVL", false);
+    addBoolParameter("LinearFiltering", false);
 }
 
 
@@ -87,12 +98,14 @@ BRDFMeasuredMERL::~BRDFMeasuredMERL()
 		delete cmbParamsPack;
 	}
 
-    glBindBuffer(GL_TEXTURE_BUFFER_EXT, tbo);
-    glDeleteBuffers( 1, &tbo);
+    //glBindBuffer(GL_TEXTURE_BUFFER_EXT, tbo);
+    //glDeleteBuffers( 1, &tbo);
+	glf->glBindBuffer(GL_TEXTURE_BUFFER, tbo);
+	glf->glDeleteBuffers(1, &tbo);
 
 	if (cmbTBO != NULL) {
-		glBindBuffer(GL_TEXTURE_BUFFER_EXT, cmbTBO);
-		glDeleteBuffers(1, &cmbTBO);
+		glf->glBindBuffer(GL_TEXTURE_BUFFER, cmbTBO);
+		glf->glDeleteBuffers(1, &cmbTBO);
 	}
 }
 
@@ -112,7 +125,7 @@ bool BRDFMeasuredMERL::loadMERLData( const char* filename )
     FILE *f = fopen(filename, "rb");
     if (!f)
             return false;
-    
+
     int dims[3];
     if (fread(dims, sizeof(int), 3, f) != 3) {
         fprintf(stderr, "read error\n");
@@ -122,19 +135,19 @@ bool BRDFMeasuredMERL::loadMERLData( const char* filename )
     numBRDFSamples = dims[0] * dims[1] * dims[2];
     if (numBRDFSamples != BRDF_SAMPLING_RES_THETA_H *
                             BRDF_SAMPLING_RES_THETA_D *
-                            BRDF_SAMPLING_RES_PHI_D / 2) 
+                            BRDF_SAMPLING_RES_PHI_D / 2)
     {
         fprintf(stderr, "Dimensions don't match\n");
         fclose(f);
         return false;
     }
-    
+
     // read the data
     double* brdf = (double*) malloc (sizeof(double)*3*numBRDFSamples);
     if (fread(brdf, sizeof(double), 3*numBRDFSamples, f) != size_t(3*numBRDFSamples)) {
         fprintf(stderr, "read error\n");
         fclose(f);
-	return false;
+    return false;
     }
     fclose(f);
 
@@ -239,20 +252,20 @@ bool BRDFMeasuredMERL::loadCmbMERL(const char* filename) {
 
 	unsigned int numBytes = numBRDFSamples * 3 * sizeof(float);
 	if (firstLoad) {
-		glGenBuffers(1, &cmbTBO);
-		glBindBuffer(GL_TEXTURE_BUFFER_EXT, cmbTBO);
-		glBufferData(GL_TEXTURE_BUFFER_EXT, numBytes, 0, GL_STATIC_DRAW);
+		glf->glGenBuffers(1, &cmbTBO);
+		glf->glBindBuffer(GL_TEXTURE_BUFFER, cmbTBO);
+		glf->glBufferData(GL_TEXTURE_BUFFER, numBytes, 0, GL_STATIC_DRAW);
 
-		glGenTextures(1, &cmbTEX);
-		glBindTexture(GL_TEXTURE_BUFFER_EXT, cmbTEX);
-		glTexBufferEXT(GL_TEXTURE_BUFFER_EXT, GL_INTENSITY32F_ARB, cmbTBO);
-		glBindBuffer(GL_TEXTURE_BUFFER_EXT, 0);
+		glf->glGenTextures(1, &cmbTEX);
+		glf->glBindTexture(GL_TEXTURE_BUFFER, cmbTEX);
+		glf->glTexBuffer(GL_TEXTURE_BUFFER, GL_INTENSITY32F_ARB, cmbTBO);
+		glf->glBindBuffer(GL_TEXTURE_BUFFER, 0);
 	}
-	glBindBuffer(GL_TEXTURE_BUFFER_EXT, cmbTBO);
-	float* p = (float*)glMapBuffer(GL_TEXTURE_BUFFER_EXT, GL_WRITE_ONLY);
+	glf->glBindBuffer(GL_TEXTURE_BUFFER, cmbTBO);
+	float* p = (float*)glf->glMapBuffer(GL_TEXTURE_BUFFER, GL_WRITE_ONLY);
 	memcpy(p, cmbBRDFData, numBytes);
-	glUnmapBuffer(GL_TEXTURE_BUFFER_EXT);
-	glBindBuffer(GL_TEXTURE_BUFFER_EXT, 0);
+	glf->glUnmapBuffer(GL_TEXTURE_BUFFER);
+	glf->glBindBuffer(GL_TEXTURE_BUFFER, 0);
 
 	// read pre-computed parameters
 	std::fstream paramsfs("mat_params.txt", std::ios::in);
@@ -286,9 +299,9 @@ bool BRDFMeasuredMERL::loadCmbMERL(const char* filename) {
 				cmbParamsPack->cluster = std::atoi(matches[11].str().c_str());
 
 				// reset specular parameters
-				getFloatParameter(3)->defaultVal = cmbParamsPack->specularAlbedo[0];
-				getFloatParameter(4)->defaultVal = cmbParamsPack->specularAlbedo[1];
-				getFloatParameter(5)->defaultVal = cmbParamsPack->specularAlbedo[2];
+				getFloatParameter(4)->defaultVal = cmbParamsPack->specularAlbedo[0];
+				getFloatParameter(5)->defaultVal = cmbParamsPack->specularAlbedo[1];
+				getFloatParameter(6)->defaultVal = cmbParamsPack->specularAlbedo[2];
 			
 				//getFloatParameter(3)->currentVal = getFloatParameter(3)->defaultVal;
 				//getFloatParameter(4)->currentVal = getFloatParameter(4)->defaultVal;
@@ -306,18 +319,18 @@ void BRDFMeasuredMERL::enableCmb(bool enable) {
 	if (cmbParamsPack == nullptr) return;
 	cmbEnabled = enable;
 	if (enable) {
-		getFloatParameter(3)->defaultVal = cmbParamsPack->specularAlbedo[0];
-		getFloatParameter(4)->defaultVal = cmbParamsPack->specularAlbedo[1];
-		getFloatParameter(5)->defaultVal = cmbParamsPack->specularAlbedo[2];
+		getFloatParameter(4)->defaultVal = cmbParamsPack->specularAlbedo[0];
+		getFloatParameter(5)->defaultVal = cmbParamsPack->specularAlbedo[1];
+		getFloatParameter(6)->defaultVal = cmbParamsPack->specularAlbedo[2];
 	}
 	else {
 		// restore
-		getFloatParameter(3)->defaultVal = paramsPack->specularAlbedo[0];
-		getFloatParameter(4)->defaultVal = paramsPack->specularAlbedo[1];
-		getFloatParameter(5)->defaultVal = paramsPack->specularAlbedo[2];
-		getFloatParameter(3)->currentVal = getFloatParameter(3)->defaultVal;
-		getFloatParameter(4)->currentVal = getFloatParameter(4)->defaultVal;
-		getFloatParameter(5)->currentVal = getFloatParameter(5)->defaultVal;
+		getFloatParameter(4)->defaultVal = paramsPack->specularAlbedo[0];
+		getFloatParameter(5)->defaultVal = paramsPack->specularAlbedo[1];
+		getFloatParameter(6)->defaultVal = paramsPack->specularAlbedo[2];
+		//getFloatParameter(4)->currentVal = getFloatParameter(4)->defaultVal;
+		//getFloatParameter(5)->currentVal = getFloatParameter(5)->defaultVal;
+		//getFloatParameter(6)->currentVal = getFloatParameter(6)->defaultVal;
 	}
 }
 
@@ -326,34 +339,31 @@ void BRDFMeasuredMERL::initGL()
 {
     if( initializedGL )
         return;
-    
-    
+
     // create buffer object
-    glGenBuffers(1, &tbo);
-    glBindBuffer(GL_TEXTURE_BUFFER_EXT, tbo);
-    
-    
-    
+    glf->glGenBuffers(1, &tbo);
+    glf->glBindBuffer(GL_TEXTURE_BUFFER, tbo);
+
     // initialize buffer object
     unsigned int numBytes = numBRDFSamples * 3 * sizeof(float);
     //printf( "size = %d bytes (%f megs)\n", numBytes, float(numBytes) / 1048576.0f );
-    glBufferData( GL_TEXTURE_BUFFER_EXT, numBytes, 0, GL_STATIC_DRAW );
-    
+    glf->glBufferData( GL_TEXTURE_BUFFER, numBytes, 0, GL_STATIC_DRAW );
+
     //tex
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_BUFFER_EXT, tex);
-    glTexBufferEXT(GL_TEXTURE_BUFFER_EXT, GL_INTENSITY32F_ARB, tbo);
-    glBindBuffer(GL_TEXTURE_BUFFER_EXT, 0);
-    
-    
-    
-    glBindBuffer(GL_TEXTURE_BUFFER_EXT, tbo);
-    float* p = (float*)glMapBuffer( GL_TEXTURE_BUFFER_EXT, GL_WRITE_ONLY );
-    
-    
+    glf->glGenTextures(1, &tex);
+    glf->glBindTexture(GL_TEXTURE_BUFFER, tex);
+    glf->glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, tbo);
+    glf->glBindBuffer(GL_TEXTURE_BUFFER, 0);
+
+    glf->glBindBuffer(GL_TEXTURE_BUFFER, tbo);
+    float* p = (float*)glf->glMapBuffer( GL_TEXTURE_BUFFER, GL_WRITE_ONLY );
+
     memcpy( p, brdfData, numBytes );
-    glUnmapBuffer(GL_TEXTURE_BUFFER_EXT);
-    glBindBuffer(GL_TEXTURE_BUFFER_EXT, 0);
+
+	//glUnmapBuffer(GL_TEXTURE_BUFFER_EXT);
+    //glBindBuffer(GL_TEXTURE_BUFFER_EXT, 0);
+	glf->glUnmapBuffer(GL_TEXTURE_BUFFER);
+	glf->glBindBuffer(GL_TEXTURE_BUFFER, 0);
     
     // keep origin data for later use
     //delete[] brdfData;
@@ -365,7 +375,7 @@ void BRDFMeasuredMERL::initGL()
 
 void BRDFMeasuredMERL::adjustShaderPreRender( DGLShader* shader )
 {
-    shader->setUniformTexture( "measuredData", tex, GL_TEXTURE_BUFFER_EXT );
+    shader->setUniformTexture( "measuredData", tex, GL_TEXTURE_BUFFER );
 
 	shader->setUniformInt("enableCmb", cmbEnabled);
 	
@@ -383,18 +393,18 @@ void BRDFMeasuredMERL::adjustShaderPreRender( DGLShader* shader )
 								paramsPack->optimalThreshold[1], paramsPack->optimalThreshold[2]);
 
 		shader->setUniformFloat("diffuseAlbedoRatio",
-								getFloatParameter(0)->currentVal / getFloatParameter(0)->defaultVal,
 								getFloatParameter(1)->currentVal / getFloatParameter(1)->defaultVal,
-								getFloatParameter(2)->currentVal / getFloatParameter(2)->defaultVal);
+								getFloatParameter(2)->currentVal / getFloatParameter(2)->defaultVal,
+								getFloatParameter(3)->currentVal / getFloatParameter(3)->defaultVal);
 
-		if (getFloatParameter(3)->defaultVal == 0) {
+		if (getFloatParameter(4)->defaultVal == 0) {
 			shader->setUniformFloat("specularAlbedoRatio", 0, 0, 0);
 		}
 		else {
 			shader->setUniformFloat("specularAlbedoRatio",
-									getFloatParameter(3)->currentVal / getFloatParameter(3)->defaultVal,
 									getFloatParameter(4)->currentVal / getFloatParameter(4)->defaultVal,
-									getFloatParameter(5)->currentVal / getFloatParameter(5)->defaultVal);
+									getFloatParameter(5)->currentVal / getFloatParameter(5)->defaultVal,
+									getFloatParameter(6)->currentVal / getFloatParameter(6)->defaultVal);
 		}
 
 	}

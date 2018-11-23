@@ -43,7 +43,8 @@ implied warranties of merchantability, fitness for a particular purpose and non-
 infringement.
 */
 
-#include <QtWidgets>
+#include <QHBoxLayout>
+#include <QSlider>
 #include "FloatVarWidget.h"
 
 FloatVarWidget::FloatVarWidget(QString name, float minVal, float maxVal, float defaultVal)

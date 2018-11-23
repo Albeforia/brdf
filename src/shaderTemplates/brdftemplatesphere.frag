@@ -43,8 +43,7 @@ implied warranties of merchantability, fitness for a particular purpose and non-
 infringement.
 */
 
-#version 130
-#extension EXT_gpu_shader4 : enable
+#version 410
 
 uniform vec3 incidentVector;
 uniform float incidentTheta;
@@ -54,6 +53,11 @@ uniform float brightness;
 uniform float gamma;
 uniform float exposure;
 uniform float useNDotL;
+
+in vec4 worldSpaceVert;
+in vec4 eyeSpaceVert;
+
+out vec4 fragColor;
 
 ::INSERT_UNIFORMS_HERE::
 
@@ -106,19 +110,12 @@ vec3 computeWithAreaLight( vec3 surfPt, vec3 incidentVector, vec3 viewVec, vec3 
 
     vec3 lightPoint = (incidentVector * lightDistanceFromCenter);
 
-
-
     // define the surface of the light source (we'll have it always face the sphere)
     vec3 toLight = normalize( (incidentVector * lightDistanceFromCenter) - surfPt );
     vec3 uVec = cross( toLight, vec3(1,0,0) );
     vec3 vVec = cross( uVec, toLight );
 
-
     vec3 result = vec3(0.0);
-
-
-
-
 
     float u = -1.0;
     for( int i = 0; i < 5; i++ )
@@ -163,14 +160,14 @@ vec3 computeWithAreaLight( vec3 surfPt, vec3 incidentVector, vec3 viewVec, vec3 
 void main(void)
 {
     // orthogonal vectors
-    vec3 normal = normalize( gl_TexCoord[0].xyz );
+    vec3 normal = normalize( worldSpaceVert.xyz );
     vec3 tangent = normalize( cross( vec3(0,1,0), normal ) );
     vec3 bitangent = normalize( cross( normal, tangent ) );
 
 
     // calculate the viewing vector
-    //vec3 viewVec = -normalize(gl_TexCoord[1].xyz);
-    vec3 surfacePos = normalize( gl_TexCoord[0].xyz );
+    //vec3 viewVec = -normalize(eyeSpaceVert.xyz);
+    vec3 surfacePos = normalize( worldSpaceVert.xyz );
     vec3 viewVec = vec3(0,0,1); // ortho mode
 
 
@@ -187,6 +184,6 @@ void main(void)
     // gamma
     b = pow( b, vec3( 1.0 / gamma ) );
 
-    gl_FragColor = vec4( clamp( b, vec3(0.0), vec3(1.0) ), 1.0 );
+    fragColor = vec4( clamp( b, vec3(0.0), vec3(1.0) ), 1.0 );
 }
 
