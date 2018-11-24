@@ -100,7 +100,9 @@ private slots:
     void resetButtonPushed();
     void soloButtonPushed();
     void soloColorsButtonPushed(); 
-    void saveParamsFileButtonPushed(); 
+	void saveParamsFileButtonPushed();
+	
+	void saveEditedButtonPushed();
 
 	void enableCombination(int);
 	void selectCmbTarget();

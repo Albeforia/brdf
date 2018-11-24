@@ -63,7 +63,9 @@ infringement.
 #define BRDF_SAMPLING_RES_THETA_H       90
 #define BRDF_SAMPLING_RES_THETA_D       90
 #define BRDF_SAMPLING_RES_PHI_D         360
-
+#define RED_SCALE						(1.0 / 1500.0);
+#define GREEN_SCALE						(1.15 / 1500.0);
+#define BLUE_SCALE						(1.66 / 1500.0);
 
 
 BRDFMeasuredMERL::BRDFMeasuredMERL()
@@ -192,17 +194,83 @@ bool BRDFMeasuredMERL::loadMERLData( const char* filename )
 				paramsPack->optimalThreshold[2] = std::atof(matches[10].str().c_str());
 				paramsPack->cluster = std::atoi(matches[11].str().c_str());
 
-				addFloatParameter("diffuseAlbedo_R", 0, 1, std::atof(matches[2].str().c_str()));
-				addFloatParameter("diffuseAlbedo_G", 0, 1, std::atof(matches[3].str().c_str()));
-				addFloatParameter("diffuseAlbedo_B", 0, 1, std::atof(matches[4].str().c_str()));
-				addFloatParameter("specularAlbedo_R", 0, 1, std::atof(matches[5].str().c_str()));
-				addFloatParameter("specularAlbedo_G", 0, 1, std::atof(matches[6].str().c_str()));
-				addFloatParameter("specularAlbedo_B", 0, 1, std::atof(matches[7].str().c_str()));
+				addFloatParameter("diffuseAlbedo_R", 0, 0.5, std::atof(matches[2].str().c_str()));
+				addFloatParameter("diffuseAlbedo_G", 0, 0.5, std::atof(matches[3].str().c_str()));
+				addFloatParameter("diffuseAlbedo_B", 0, 0.5, std::atof(matches[4].str().c_str()));
+				addFloatParameter("specularAlbedo_R", 0, 0.5, std::atof(matches[5].str().c_str()));
+				addFloatParameter("specularAlbedo_G", 0, 0.5, std::atof(matches[6].str().c_str()));
+				addFloatParameter("specularAlbedo_B", 0, 0.5, std::atof(matches[7].str().c_str()));
 			}
 		}
 	}
 
     return true;
+}
+
+void BRDFMeasuredMERL::saveMERLData(const char* filename) {
+	FILE *f = fopen(filename, "wb");
+	if (!f)
+		return;
+
+	int dims[] = { BRDF_SAMPLING_RES_THETA_H, BRDF_SAMPLING_RES_THETA_D, BRDF_SAMPLING_RES_PHI_D/2 };
+	fwrite(dims, sizeof(int), 3, f);
+
+	auto data = (double*)malloc(sizeof(double) * 3 * numBRDFSamples);
+	for (int i = 0; i < numBRDFSamples; i++)
+	{
+		float origin_r = brdfData[i] * RED_SCALE;
+		float origin_g = brdfData[i + numBRDFSamples] * GREEN_SCALE;
+		float origin_b = brdfData[i + numBRDFSamples * 2] * BLUE_SCALE;
+
+		float diffuseAlbedoRatio_r = getFloatParameter(1)->currentVal / getFloatParameter(1)->defaultVal;
+		float diffuseAlbedoRatio_g = getFloatParameter(2)->currentVal / getFloatParameter(2)->defaultVal;
+		float diffuseAlbedoRatio_b = getFloatParameter(3)->currentVal / getFloatParameter(3)->defaultVal;
+		float specularAlbedoRatio_r = getFloatParameter(4)->currentVal / getFloatParameter(4)->defaultVal;
+		float specularAlbedoRatio_g = getFloatParameter(5)->currentVal / getFloatParameter(5)->defaultVal;
+		float specularAlbedoRatio_b = getFloatParameter(6)->currentVal / getFloatParameter(6)->defaultVal;
+
+		float diffuse_r, diffuse_g, diffuse_b;
+		float specular_r = 0, specular_g = 0, specular_b = 0;
+
+		if (paramsPack->optimalThreshold[0] == 0) {
+			diffuse_r = origin_r * diffuseAlbedoRatio_r;
+			diffuse_g = origin_g * diffuseAlbedoRatio_g;
+			diffuse_b = origin_b * diffuseAlbedoRatio_b;
+		}
+		else {
+			diffuse_r = std::min(origin_r, paramsPack->optimalThreshold[0]) * diffuseAlbedoRatio_r;
+			diffuse_g = std::min(origin_g, paramsPack->optimalThreshold[1]) * diffuseAlbedoRatio_g;
+			diffuse_b = std::min(origin_b, paramsPack->optimalThreshold[2]) * diffuseAlbedoRatio_b;
+		}
+
+		if (cmbEnabled && cmbParamsPack != nullptr) {
+			float cmb_r = cmbBRDFData[i] * RED_SCALE;
+			float cmb_g = cmbBRDFData[i + numBRDFSamples] * GREEN_SCALE;
+			float cmb_b = cmbBRDFData[i + numBRDFSamples * 2] * BLUE_SCALE;
+			if (cmbParamsPack->optimalThreshold[0] != 0) {
+				specular_r = std::max(0.0f, cmb_r - cmbParamsPack->optimalThreshold[0])* specularAlbedoRatio_r;
+				specular_g = std::max(0.0f, cmb_g - cmbParamsPack->optimalThreshold[1])* specularAlbedoRatio_g;
+				specular_b = std::max(0.0f, cmb_b - cmbParamsPack->optimalThreshold[2])* specularAlbedoRatio_b;
+			}
+		}
+		else
+		{
+			if (paramsPack->optimalThreshold[0] != 0) {
+				specular_r = std::max(0.0f, origin_r - paramsPack->optimalThreshold[0])* specularAlbedoRatio_r;
+				specular_g = std::max(0.0f, origin_g - paramsPack->optimalThreshold[1])* specularAlbedoRatio_g;
+				specular_b = std::max(0.0f, origin_b - paramsPack->optimalThreshold[2])* specularAlbedoRatio_b;
+			}
+		}
+
+		data[i] = (diffuse_r + specular_r) / RED_SCALE;
+		data[i + numBRDFSamples] = (diffuse_g + specular_g) / GREEN_SCALE;
+		data[i + numBRDFSamples * 2] = (diffuse_b + specular_b) / BLUE_SCALE;
+	}
+
+	fwrite(data, sizeof(double), 3 * numBRDFSamples, f);
+
+	free(data);
+	fclose(f);
 }
 
 bool BRDFMeasuredMERL::loadCmbMERL(const char* filename) {

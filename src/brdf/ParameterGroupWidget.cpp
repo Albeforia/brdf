@@ -172,6 +172,13 @@ ParameterGroupWidget::ParameterGroupWidget( ParameterWindow* pWindow, BRDFBase* 
     QPixmap* folderPixmap = new QPixmap((getImagesPath() + "folderSmall.png").c_str());
     saveAction->setIcon( QIcon(*folderPixmap) );
     connect( saveAction, SIGNAL(triggered()), this, SLOT(saveParamsFileButtonPushed()) );
+
+	// add option for saving edited brdf
+	if (dynamic_cast<BRDFMeasuredMERL*>(brdf)) {
+		QAction* saveEditedAction = optionsMenu->addAction("Save BRDF...");
+		saveEditedAction->setIcon(QIcon(*folderPixmap));
+		connect(saveEditedAction, SIGNAL(triggered()), this, SLOT( saveEditedButtonPushed() ));
+	}
     
     optionsMenu->addSeparator();
     
@@ -497,6 +504,26 @@ void ParameterGroupWidget::saveParamsFileButtonPushed()
     if( fileName.length() )
         //brdf->saveParamsFile( fileName.toStdString().c_str() );
 		brdf->saveParamsFile(fileName.toLatin1().constData());
+}
+
+
+void ParameterGroupWidget::saveEditedButtonPushed() {
+	auto merl = dynamic_cast<BRDFMeasuredMERL*>(brdf);
+
+	if (!merl) return;
+
+	QString shortBRDFName = titleButton->text().trimmed();
+	int dotIndex = shortBRDFName.lastIndexOf(".");
+	if (dotIndex != -1)
+		shortBRDFName = shortBRDFName.left(dotIndex);
+
+	QString fileName = QFileDialog::getSaveFileName(this, "Save Edited BRDF",
+		QString("./") + QString("edited-") +shortBRDFName + QString(".binary"),
+		"Measured BRDF(*.binary)");
+
+	if (fileName.length()){
+		merl->saveMERLData(fileName.toLatin1().constData());
+	}
 }
 
 

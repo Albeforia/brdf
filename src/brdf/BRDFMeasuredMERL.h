@@ -59,6 +59,7 @@ public:
 
     bool loadMERLData( const char* filename );
     bool loadCmbMERL( const char* filename );
+	void saveMERLData( const char* filename );
 
 	void enableCmb(bool);
 
